@@ -1,5 +1,7 @@
 package by.liashuk.urlconverter.service.impl;
 
+import by.liashuk.urlconverter.dto.WebSiteUrlDTO;
+import by.liashuk.urlconverter.dto.converter.Converter;
 import by.liashuk.urlconverter.model.WebSiteUrl;
 import by.liashuk.urlconverter.repository.ConverterRepository;
 import by.liashuk.urlconverter.service.ConverterService;
@@ -23,17 +25,20 @@ import java.util.Optional;
 @Slf4j
 public class ConverterServiceImpl implements ConverterService {
 
+    private final Converter converter;
     private final ConverterRepository repository;
 
     @Autowired
-    public ConverterServiceImpl(ConverterRepository repository) {
+    public ConverterServiceImpl(Converter converter, ConverterRepository repository) {
+        this.converter = converter;
         this.repository = repository;
     }
 
     @SneakyThrows
     @Override
-    public File getPdfFromUrl(WebSiteUrl body) {
-        Optional<WebSiteUrl> siteUrlOptional = repository.findBySiteUrl(body.getSiteUrl());
+    public File getPdfFromUrl(WebSiteUrlDTO body) {
+        WebSiteUrl webSiteUrl = converter.toWebSiteUrl(body);
+        Optional<WebSiteUrl> siteUrlOptional = repository.findBySiteUrl(webSiteUrl.getSiteUrl());
         if (siteUrlOptional.isPresent()) {
             log.info("In ConverterServiceImpl getPdfFromUrl() url already exists : {}", siteUrlOptional.get());
             return new File(siteUrlOptional.get().getPdfUrl());
@@ -45,16 +50,16 @@ public class ConverterServiceImpl implements ConverterService {
             options.setExecutablePath("F:/chrome-win/chrome.exe");
             Browser browser = Puppeteer.launch(options);
             Page page = browser.newPage();
-            page.goTo(body.getSiteUrl());
+            page.goTo(webSiteUrl.getSiteUrl());
             String path = repository.findAll().size()+1+".pdf";
             PDFOptions pdfOptions = new PDFOptions();
             pdfOptions.setPath(path);
             page.pdf(pdfOptions);
             page.close();
             browser.close();
-            body.setPdfUrl(path);
-            repository.save(body);
-            log.info("IN ConverterServiceImpl getPDFFromUrl() url: {}, pdf: {}", body.getSiteUrl(), path);
+            webSiteUrl.setPdfUrl(path);
+            repository.save(webSiteUrl);
+            log.info("IN ConverterServiceImpl getPDFFromUrl() url: {}, pdf: {}", webSiteUrl.getSiteUrl(), path);
             return new File(path);
         }
     }

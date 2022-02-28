@@ -1,7 +1,7 @@
 package by.liashuk.urlconverter.rest;
 
-import by.liashuk.urlconverter.model.WebSiteUrl;
-import by.liashuk.urlconverter.service.impl.ConverterServiceImpl;
+import by.liashuk.urlconverter.dto.WebSiteUrlDTO;
+import by.liashuk.urlconverter.service.ConverterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -19,16 +19,16 @@ produces = MediaType.APPLICATION_JSON_VALUE,
 consumes = MediaType.APPLICATION_JSON_VALUE)
 public class ConverterController {
 
-    private final ConverterServiceImpl converterService;
+    private final ConverterService converterService;
 
     @Autowired
-    public ConverterController(ConverterServiceImpl converterService) {
+    public ConverterController(ConverterService converterService) {
         this.converterService = converterService;
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
-    public File convertUrl(@RequestBody WebSiteUrl body) {
+    public File convertUrl(@RequestBody WebSiteUrlDTO body) {
         return converterService.getPdfFromUrl(body);
     }
 }
